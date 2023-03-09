@@ -10,13 +10,16 @@ import MapKit
 import CoreLocation
 
 class ViewController: UIViewController {
-
+    
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var routeButton: UIButton!
     @IBOutlet weak var resetButton: UIButton!
     @IBOutlet weak var addAdressButton: UIButton!
+    @IBOutlet weak var searchSelfLocationButton: UIButton!
     
     private var arrayOfAnnotation = [MKPointAnnotation]()
+    let locationManager = CLLocationManager()
+    var selfLocation = MKPointAnnotation()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,10 +27,16 @@ class ViewController: UIViewController {
         mapView.delegate = self
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(true)
+        checkLocationEnabled()
+    }
+    
     private func setConfigOfButtons() {
         setConfigOfRouteButton()
         setConfigOfResetButton()
         setConfigOfAddAdressButton()
+        setConfigOfSearchSelfLocationButton()
     }
     
     private func setConfigOfRouteButton(){
@@ -66,6 +75,14 @@ class ViewController: UIViewController {
         }
     }
     
+    private func setConfigOfSearchSelfLocationButton(){
+        searchSelfLocationButton.addTarget(self, action: #selector(targetForSearchSelfLocationButton), for: .touchUpInside)
+    }
+    
+    @objc func targetForSearchSelfLocationButton(_ sender: UIButton){
+        showMyLocation()
+    }
+    
     private func setupPlaceMark(_ adress: String){
         let geoCoder = CLGeocoder()
         geoCoder.geocodeAddressString(adress) { [weak self] (placeMarks, error) in
@@ -100,7 +117,7 @@ class ViewController: UIViewController {
         let request = MKDirections.Request()
         request.source = MKMapItem(placemark: startLocation)
         request.destination = MKMapItem(placemark: finishLocation)
-        request.transportType = .walking
+        request.transportType = .automobile
         request.requestsAlternateRoutes = true
         
         let diraction = MKDirections(request: request)
@@ -124,5 +141,75 @@ class ViewController: UIViewController {
     private func deleteAllFromMapView(){
         mapView.removeOverlays(mapView.overlays)
         mapView.removeAnnotations(mapView.annotations)
+    }
+    
+    private func checkAuthorization(){
+        switch locationManager.authorizationStatus {
+        case .authorizedAlways :
+            break
+        case .authorizedWhenInUse:
+            mapView.showsUserLocation = true
+            locationManager.startUpdatingLocation()
+        case .denied:
+            showAlertLocation("You denied using your location",
+                              "Do you want to change?",
+                              URL(string: UIApplication.openSettingsURLString))
+            
+        case .restricted:
+            break
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        }
+    }
+    
+    private func showAlertLocation(_ title: String, _ massage: String, _ url: URL?){
+        let alert = UIAlertController(title: title,
+                                      message: massage,
+                                      preferredStyle: .alert)
+        
+        let settingsAction = UIAlertAction(title: "Settings",
+                                           style: .default) { (alert) in
+            
+            if url != nil {
+                UIApplication.shared.open(url!,
+                                          options: [:],
+                                          completionHandler: nil)
+            } else {
+                return
+            }
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel",
+                                         style: .cancel,
+                                         handler: nil)
+        
+        alert.addAction(settingsAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true, completion: nil)
+    }
+    
+    private func checkLocationEnabled(){
+        if CLLocationManager.locationServicesEnabled() {
+            setConfigOfLocationManager()
+        } else {
+            showAlertLocation("Location service off",
+                              "Please switch on your location service",
+                              URL(string: "App-Prefs:root=LOCATION_SERVICES"))
+        }
+    }
+    
+    private func setConfigOfLocationManager(){
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
+    }
+    
+    private func showMyLocation(){
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
+        arrayOfAnnotation.append(selfLocation)
+        print(selfLocation.coordinate)
+        self.mapView.showAnnotations(self.arrayOfAnnotation, animated: true)
     }
 }

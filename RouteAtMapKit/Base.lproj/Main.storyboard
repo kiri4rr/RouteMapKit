@@ -99,6 +99,7 @@
                         <outlet property="mapView" destination="prF-c5-cmH" id="geX-9m-fZB"/>
                         <outlet property="resetButton" destination="gXT-fD-8sy" id="Qhr-Eh-z1n"/>
                         <outlet property="routeButton" destination="0wB-aE-vWy" id="suc-cj-mko"/>
+                        <outlet property="searchSelfLocationButton" destination="zIy-Go-mPq" id="CrU-jQ-f3v"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

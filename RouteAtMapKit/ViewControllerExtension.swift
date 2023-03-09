@@ -51,3 +51,38 @@ extension UIViewController: MKMapViewDelegate {
     }
 }
 
+extension ViewController: CLLocationManagerDelegate{
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        if manager.authorizationStatus == .authorizedWhenInUse{
+            locationManager.desiredAccuracy = kCLLocationAccuracyBest
+            locationManager.startUpdatingLocation()
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else {return}
+        print(location)
+        guard let coordinate = manager.location?.coordinate else {return}
+        
+//        let region = MKCoordinateRegion(center: location.coordinate,
+//                                        latitudinalMeters: 1000,
+//                                        longitudinalMeters: 1000)
+//        mapView.setRegion(region, animated: true)
+        
+        let annotation = MKPointAnnotation()
+        annotation.title = "My location"
+        annotation.coordinate = coordinate
+        
+        selfLocation = annotation
+//        mapView.addAnnotation(annotation)
+        
+        locationManager.stopUpdatingLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Failed to get user location: \(error.localizedDescription)")
+    }
+    
+}
+
